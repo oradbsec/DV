@@ -1,0 +1,78 @@
+# DV-Academy-03-Configure-Enable-DV
+
+CREATE PROFILE C##DV_PROFILE LIMIT 
+   FAILED_LOGIN_ATTEMPTS 5
+   PASSWORD_VERIFY_FUNCTION ora12c_verify_function
+   PASSWORD_LOCK_TIME 1/1440
+   CONTAINER=all;
+
+ALTER PROFILE C##DV_PROFILE LIMIT 
+   FAILED_LOGIN_ATTEMPTS 5
+   PASSWORD_VERIFY_FUNCTION null
+   PASSWORD_LOCK_TIME 1/1440
+   CONTAINER=all;
+    
+create user c##dvowner identified by Oracle123 profile c##dv_profile container=all;
+create user c##dvacctmgr identified by Oracle123 profile c##dv_profile container=all;
+
+create user c##dvowner_bkup identified by Oracle123 profile c##dv_profile container=all;
+create user c##dvacctmgr_bkup identified by Oracle123 profile c##dv_profile container=all;
+
+grant connect, resource to c##dvowner, c##dvowner_bkup, c##dvacctmgr, c##dvacctmgr_bkup container=all;
+
+set lines 210
+set pages 9999
+
+column grantee format a25
+column granted_role format a25
+select grantee, granted_role from dba_role_privs where grantee in ('C##DVOWNER','C##DVACCTMGR','C##DVOWNER_BKUP','C##DVACCTMGR_BKUP');
+
+select * from cdb_dv_status order by con_id;
+select parameter, value from v$option where parameter in ('Oracle Database Vault','Oracle Label Security') order by 1;
+
+execute dvsys.configure_dv('C##DVOWNER','C##DVACCTMGR');
+
+grant dv_owner to c##dvowner_bkup with admin option container=all;
+grant dv_acctmgr to c##dvacctmgr_bkup with admin option container=all;
+
+set pages 9999
+set lines 180
+select * from cdb_dv_status order by con_id;
+select parameter, value from v$option where parameter in ('Oracle Database Vault','Oracle Label Security') order by 1;
+
+column grantee format a25
+column granted_role format a25
+select grantee, granted_role from dba_role_privs where grantee in ('C##DVOWNER','C##DVACCTMGR','C##DVOWNER_BKUP','C##DVACCTMGR_BKUP');
+
+connect c##dvowner/Oracle123
+
+exec dbms_macadm.enable_dv;
+
+connect / as sysdba
+
+select * from cdb_dv_status order by con_id;
+
+shutdown immediate;
+startup;
+
+set pages 9999
+set lines 180
+select * from cdb_dv_status order by con_id;
+select parameter, value from v$option where parameter in ('Oracle Database Vault','Oracle Label Security') order by 1;
+
+connect / as sysdba
+
+alter session set container = freepdb1;
+
+exec dbms_macadm.configure_dv('C##DVOWNER','C##DVACCTMGR');
+
+connect c##dvowner/Oracle123
+alter session set container = freepdb1;
+
+exec dbms_macadm.enable_dv;
+
+connect / as sysdba
+alter pluggable database freepdb1 close immediate;
+alter pluggable database freepdb1 open;
+
+select * from cdb_dv_status order by con_id;
