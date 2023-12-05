@@ -1,0 +1,39 @@
+DV-Academy-Limit-Destructive-Commands.txt
+
+sudo su - hr
+
+sql c##dvowner/Oracle123@localhost:1521/freepdb1
+
+exec DBMS_MACADM.CREATE_COMMAND_RULE(command => 'TRUNCATE TABLE', rule_set_name => 'Disabled', object_owner => 'HR', object_name => '%', enabled => DBMS_MACUTL.G_YES);
+
+exec DBMS_MACADM.CREATE_COMMAND_RULE(command => 'DROP TABLE', rule_set_name => 'Disabled', object_owner => 'HR', object_name => '%', enabled => DBMS_MACUTL.G_YES);
+
+connect system/Oracle123@localhost:1521/freepdb1
+
+select count(*) From hr.employees;
+
+-- this should fail
+drop table hr.employees;
+
+-- this should fail
+truncate table hr.employees;
+
+connect hr/Oracle123@localhost:1521/freepdb1
+
+select count(*) From hr.employees;
+
+-- this should fail
+drop table hr.employees;
+
+-- this should fail
+truncate table hr.employees;
+
+connect c##dvowner/Oracle123@localhost:1521/freepdb1
+
+exec DBMS_MACADM.DELETE_COMMAND_RULE(command => 'TRUNCATE TABLE', object_owner => 'HR', object_name => '%');
+exec DBMS_MACADM.DELETE_COMMAND_RULE(command => 'DROP TABLE', object_owner => 'HR', object_name => '%');
+
+
+
+
+
