@@ -1,0 +1,27 @@
+
+
+id
+sudo id
+
+sudo yum install -y sqlcl
+
+which sql
+
+sudo yum install -y java
+
+sql
+
+sudo useradd dba_debra
+
+id -a dba_debra
+
+sudo su - dba_debra
+
+id -a
+
+sql c##dba_debra/Oracle123@localhost:1521/freepdb1
+
+show user;
+
+select * from session_roles order by 1;
+

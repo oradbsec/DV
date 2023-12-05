@@ -1,0 +1,49 @@
+
+DV-Academy-06-Install-HR-schema.txt
+
+URL to download sample zip: https://github.com/oracle-samples/db-sample-schemas/
+
+
+connect c##dvacctmgr/Oracle123@localhost:1521/freepdb1
+
+create user hr identified by Oracle123 default tablespace users;
+
+connect hr/Oracle123@localhost:1521/freepdb1
+
+connect sys/Oracle123@localhost:1521/freepdb1 as sysdba
+
+select sys_context('userenv','os_user') from dual;
+
+wget https://github.com/oracle-samples/db-sample-schemas/archive/refs/tags/v23.2.zip
+
+unzip v23.2.zip
+
+cd db-sample-schemas-23.2
+
+cd human_resources
+
+view hr_install.sql
+
+sql sys/Oracle123@localhost:1521/freepdb1 as sysdba
+
+-- this should fail 
+@hr_install.sql
+
+
+-- temporarily grant DV_ACCTMGR to SYS
+
+sql c##dvacctmgr/Oracle123@localhost:1521/freepdb1
+
+grant dv_acctmgr to sys;
+
+connect sys/Oracle123@localhost:1521/freepdb1 as sysdba
+@hr_install.sql
+
+sql c##dvacctmgr/Oracle123@localhost:1521/freepdb1
+revoke dv_acctmgr from sys;
+
+connect hr/Oracle123@localhost:1521/freepdb1
+
+select * from tab;
+
+select count(*) from hr.employees;
