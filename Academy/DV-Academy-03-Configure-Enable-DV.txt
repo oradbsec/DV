@@ -32,6 +32,8 @@ select parameter, value from v$option where parameter in ('Oracle Database Vault
 
 execute dvsys.configure_dv('C##DVOWNER','C##DVACCTMGR');
 
+select role from dba_roles where role like 'DV%' order by 1;
+
 grant dv_owner to c##dvowner_bkup with admin option container=all;
 grant dv_acctmgr to c##dvacctmgr_bkup with admin option container=all;
 
@@ -51,6 +53,7 @@ exec dbms_macadm.enable_dv;
 connect / as sysdba
 
 select * from cdb_dv_status order by con_id;
+select parameter, value from v$option where parameter in ('Oracle Database Vault','Oracle Label Security') order by 1;
 
 shutdown immediate;
 startup;
@@ -60,11 +63,24 @@ set lines 180
 select * from cdb_dv_status order by con_id;
 select parameter, value from v$option where parameter in ('Oracle Database Vault','Oracle Label Security') order by 1;
 
+show user;
+
+-- this will fail
+create user c##dba_debra2 identified by Oracle123;
+
+connect c##dvacctmgr/Oracle123
+create user c##dba_debra2 identified by Oracle123;
+
+drop user c##dba_debra2 cascade;
+
 connect / as sysdba
+
+select * from cdb_dv_status order by con_id;
 
 alter session set container = freepdb1;
 
-exec dbms_macadm.configure_dv('C##DVOWNER','C##DVACCTMGR');
+-- run this using sys.configure_dv instead of dbms_macadm.configure_dv
+exec sys.configure_dv('C##DVOWNER','C##DVACCTMGR');
 
 connect c##dvowner/Oracle123
 alter session set container = freepdb1;
@@ -76,3 +92,14 @@ alter pluggable database freepdb1 close immediate;
 alter pluggable database freepdb1 open;
 
 select * from cdb_dv_status order by con_id;
+
+-- this should fail
+create user pdb_debra identified by Oracle123;
+
+connect c##dvacctmgr/Oracle123@localhost:1521/freepdb1
+
+create user pdb_debra identified by Oracle123;
+
+-- this grant should fail
+grant dba to pdb_debra;
+
