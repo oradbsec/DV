@@ -1,0 +1,26 @@
+
+set pages 9999
+set lines 180
+select * from cdb_dv_status order by con_id;
+select parameter, value from v$option where parameter in ('Oracle Database Vault','Oracle Label Security') order by 1;
+
+-- this will fail
+create user c##dba_debra identified by Oracle123 container=all;
+
+-- this is the right way
+connect c##dvacctmgr/Oracle123
+create user c##dba_debra identified by Oracle123 container=all;
+
+connect / as sysdba
+
+grant connect to c##dba_debra container=all;
+
+grant dba to c##dba_debra container=all;
+
+connect c##dba_debra/Oracle123
+
+alter session set container = freepdb1;
+
+show user;
+
+show con_name
